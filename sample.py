@@ -3,11 +3,11 @@ import setting
 import urllib.request
 import random
 import os.path
-import requests
 
 g = Github(setting.Github_User, setting.Github_Pass)
 q = "sample"
-sample_list = g.search_code("{0}+extension:py".format(q))
+extension = "py"
+sample_list = g.search_code("{0}+extension:{1}".format(q,extension))
 sample = sample_list[0]
 
 raw_url = sample.html_url.replace("github.com","raw.githubusercontent.com",1)
