@@ -25,9 +25,9 @@ def regist(p):
     with closing(sqlite3.connect(dbname)) as conn:
         c = conn.cursor()
 
-        regist_q = '''insert into files (name, path, complete, extension)'''
-        file_list = []
+        regist_q = '''insert into files (name, path, complete, extension) values (?,?,?,?)'''
         def crawling(path):
+            l = []
             for i in os.listdir(path):
                 if i[0] == ".":
                     print("dotfiles")
@@ -35,14 +35,35 @@ def regist(p):
                 new_path = os.path.join(path,i)
                 print(new_path)
                 if os.path.isdir(new_path):
-                    crawling(new_path)
+                    l += crawling(new_path)
+                else:
+                    name = i
+                    path_s = os.path.abspath(new_path)
+                    complete = 0
+                    root, ext = os.path.splitext(path_s)
+                    ext = ext.replace(".","",1)
+                    l.append((name,path_s,complete,ext))
+            print(l)
+            return l
+        file_list = crawling(p)
 
-        crawling(p)
+        c.executemany(regist_q, file_list)
+        conn.commit()
 
 
         conn.close()
 
-regist("download/neural-networks-and-deep-learning")
+# regist("download/neural-networks-and-deep-learning")
+
+def select_source(ext):
+    with closing(sqlite3.connect((dbname))) as conn:
+        c = conn.cursor()
+
+        q = "select * from files where extension like '%{0}' order by complete ASC;".format(ext)
+        for row in c.execute(q):
+            return row
+
+print(select_source("py"))
 
 def clone(repo, path):
     clone_path = "{0}/{1}".format(path, repo.name)
